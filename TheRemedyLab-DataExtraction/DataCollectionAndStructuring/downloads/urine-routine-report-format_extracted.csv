@@ -1,0 +1,34 @@
+Field,Value
+Patient Name,
+Patient ID,1115
+Age,28 YRS
+Sex,Male
+Report Date,25/11/2024
+UHID,
+Lab ID,
+---,---
+Hemoglobin,❌ Missing
+WBC,❌ Missing
+RBC,❌ Missing
+Platelet Count,❌ Missing
+Total Cholesterol,❌ Missing
+HDL,❌ Missing
+LDL,❌ Missing
+Triglycerides,❌ Missing
+VLDL,❌ Missing
+LDL/HDL Ratio,❌ Missing
+Total Cholesterol/HDL Ratio,❌ Missing
+TG/HDL Ratio,❌ Missing
+Non-HDL Cholesterol,❌ Missing
+Fasting Glucose,❌ Missing
+Random Glucose,❌ Missing
+Glucose,❌ Missing
+HbA1c,❌ Missing
+ALT (SGPT),❌ Missing
+AST (SGOT),❌ Missing
+Total Bilirubin,❌ Missing
+Alkaline Phosphatase,❌ Missing
+Serum Creatinine,❌ Missing
+Blood Urea,❌ Missing
+Urine pH,❌ Missing
+Specific Gravity,1.025
