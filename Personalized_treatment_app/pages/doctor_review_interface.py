@@ -4,11 +4,14 @@ import streamlit as st
 from models.recommendation import Recommendation
 from models.health_report import HealthReport
 from models.patient import Patient
+from models.user import User
+from utils.layout import render_header, render_footer
 from models.doctor import Doctor # Although current_doctor is from session, useful for type hints/future use
 import json # For parsing extracted_data_json
 from utils.helpers import format_date_for_display
 
 def show_page():
+    render_header()
     """
     Displays an interface for doctors to review, approve, modify, or reject AI-generated recommendations.
     """
@@ -40,21 +43,24 @@ def show_page():
             st.rerun()
         return
 
-    report = HealthReport.get_by_id(recommendation.report_id)
-    patient = Patient.get_by_id(recommendation.patient_id)
-    
+    report = HealthReport.find_by_id(recommendation.report_id)
+
+    patient = Patient.get_by_patient_id(recommendation.patient_id)
     if not report or not patient:
         st.error("Related report or patient data not found.")
         if st.button("Go to Doctor Dashboard"):
             st.session_state.page = "doctor_dashboard"
             st.rerun()
         return
-
-    st.title("Review AI-Generated Recommendation")
-    st.markdown("---")
+    patient_user = User.get_by_user_id(patient.user_id)
+    if not patient_user:
+        st.error("Patient user info not found.")
+        return
+        st.title("Review AI-Generated Recommendation")
+        st.markdown("---")
 
     # --- Display Basic Info ---
-    st.subheader(f"Patient: {patient.first_name} {patient.last_name}")
+    st.subheader(f"Patient: {patient_user.first_name} {patient_user.last_name}")
     st.write(f"**Report:** {report.file_name} (Uploaded: {format_date_for_display(report.upload_date)})")
     st.write(f"**Recommendation ID:** `{recommendation.recommendation_id}`")
     st.write(f"**AI Generated Priority:** {recommendation.ai_generated_priority}")
@@ -101,11 +107,16 @@ def show_page():
            modified_lifestyle != (recommendation.ai_generated_lifestyle or ""):
             if st.button("Modify & Approve", key="modify_approve_button"):
                 try:
+                    # Get doctor_id from logged-in user_id
+                    doctor = Doctor.get_by_user_id(st.session_state.user_id)
+                    if not doctor:
+                        st.error("Doctor record not found for this user.")
+                        return
                     # Call the method with modified content
-                    recommendation.modify_and_approve(st.session_state.user_id, modified_treatment, modified_lifestyle, doctor_notes)
+                    recommendation.modify_and_approve(doctor.doctor_id, modified_treatment, modified_lifestyle, doctor_notes)
                     st.success("Recommendation modified and approved successfully!")
                     st.session_state.page = "doctor_dashboard"
-                    st.rerun()
+                    # st.rerun()
                 except Exception as e:
                     st.error(f"Error modifying and approving recommendation: {e}")
         else:
@@ -125,5 +136,9 @@ def show_page():
 
     st.markdown("---")
     if st.button("Back to Doctor Dashboard", key="back_to_dashboard_btn"):
+        del st.session_state.review_recommendation_id
+        if "review_report_id" in st.session_state:
+            del st.session_state.review_report_id
         st.session_state.page = "doctor_dashboard"
         st.rerun()
+    render_footer()

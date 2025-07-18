@@ -1,3 +1,4 @@
+from turtle import st
 import uuid
 import datetime
 from database.db_utils import DBManager
@@ -93,7 +94,7 @@ class Recommendation:
         """
         query = """
             SELECT * FROM recommendations
-            WHERE doctor_id = ? AND status IN ('approved_by_doctor', 'modified_by_doctor')
+            WHERE doctor_id = ? AND status IN ('approved_by_doctor', 'modified_and_approved_by_doctor')
             ORDER BY reviewed_date DESC
         """
         results = DBManager.fetch_all(query, (doctor_id,))
@@ -115,7 +116,7 @@ class Recommendation:
             JOIN health_reports hr ON r.report_id = hr.report_id
             LEFT JOIN doctors d ON r.doctor_id = d.doctor_id
             LEFT JOIN users u ON d.user_id = u.user_id
-            WHERE r.patient_id = ? AND r.status IN ('approved_by_doctor', 'modified_by_doctor')
+            WHERE r.patient_id = ? AND r.status IN ('approved_by_doctor', 'modified_and_approved_by_doctor')
             ORDER BY r.reviewed_date DESC
         """
         recs_data = DBManager.fetch_all(query, (patient_id,))
@@ -151,6 +152,36 @@ class Recommendation:
             self.reviewed_date, self.last_updated_at,
             self.recommendation_id
         ))
+       
+        # get doctor_id from logged-in user
+        # if not self.doctor_id:
+    # --- Approve the recommendation as-is without modifying treatment/lifestyle ---
+    # This is a convenience method for doctors who want to approve the AI-generated recommendation without changes
+   
+    def approve(self, doctor_id: str, doctor_notes: str = "") -> bool:
+        """
+        Approves the recommendation as-is without modifying treatment/lifestyle.
+        """
+        return self.update_status(
+            new_status="approved_by_doctor",
+            doctor_id=doctor_id,
+            doctor_notes=doctor_notes,
+            approved_treatment=self.ai_generated_treatment,
+            approved_lifestyle=self.ai_generated_lifestyle
+        )
+    
+    # --- Modify the recommendation ---
+    def modify_and_approve(self, doctor_id: str, approved_treatment: str, approved_lifestyle: str, doctor_notes: str = "") -> bool:
+        """
+        Allows the doctor to modify the treatment/lifestyle plan and approve the recommendation.
+        """
+        return self.update_status(
+            new_status="modified_and_approved_by_doctor",
+            doctor_id=doctor_id,
+            doctor_notes=doctor_notes,
+            approved_treatment=approved_treatment,
+            approved_lifestyle=approved_lifestyle
+        )
 
     def to_dict(self):
         return {

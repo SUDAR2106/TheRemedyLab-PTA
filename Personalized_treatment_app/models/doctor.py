@@ -18,6 +18,13 @@ class Doctor:
 
     @classmethod
     def create(cls, user_id: str, medical_license_number: str = None, specialization: str = None, contact_number: str = None, hospital_affiliation: str = None, is_available: int = 1, last_assignment_date: str = None) -> 'Doctor':
+      
+        # Check for duplicate license
+        from database.db_utils import DBManager
+        existing = DBManager.fetch_one("SELECT * FROM doctors WHERE medical_license_number = ?", (medical_license_number,))
+        if existing:
+            return None, "duplicate_license" # Prevent duplicate license numbers
+
         doctor_id = str(uuid.uuid4())
         query ="""
         INSERT INTO doctors 
@@ -34,8 +41,8 @@ class Doctor:
         if success:
             print(f"Doctor record created for user {user_id}.")
             return cls(doctor_id, user_id, medical_license_number, specialization, contact_number, hospital_affiliation, is_available, last_assignment_date)
-        return None
-
+        return None,"database_error"
+       
     @classmethod
     def get_by_doctor_id(cls, doctor_id: str) -> 'Doctor':
         query = "SELECT * FROM doctors WHERE doctor_id = ?"

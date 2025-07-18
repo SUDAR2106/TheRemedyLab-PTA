@@ -3,14 +3,24 @@ import streamlit as st
 import bcrypt
 from datetime import datetime, date
 
+from database.db_utils import DBManager
 from models.user import User
 from models.patient import Patient
 from models.doctor import Doctor
 from utils.layout import render_header, render_footer
+
 def app(navigate_to):
     render_header()
     st.title("📝 Sign Up")
     st.markdown("Create your account to get started.")
+
+    # Initialize error flags
+    password_error = False
+    email_error = False
+
+    # Initialize error flags
+    password_error = False
+    email_error = False
 
     user_type = st.radio("I am a:", ("Patient", "Doctor"), key="signup_user_type")
 
@@ -71,8 +81,6 @@ def app(navigate_to):
 
             if password != confirm_password:
                 st.error("Passwords do not match.")
-                st.session_state.signup_password = ""
-                st.session_state.signup_confirm_password = ""
                 return
 
             if user_type == "Doctor" and (not specialization or not license_id):
@@ -86,61 +94,83 @@ def app(navigate_to):
 
             if email and User.get_by_email(email):
                 st.error("Email already registered. Please use a different one or login.")
-                st.session_state.signup_email = ""
                 return
-
-            try:
-                # --- Secure password hashing ---
-                # hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-                # Create user
-                new_user = User.create(
-                    username=username,
-                    password=password, # plain text password only!
-                    user_type=user_type.lower(),
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=email
-                )
-
-                if not new_user:
-                    st.error("Registration failed. Please try again.")
+            # --- Doctor-specific Validation ---
+            if user_type == "Doctor":
+                if not specialization or not license_id:
+                    st.error("Doctor's specialization and license ID are required.")
                     return
 
-                # Create profile based on user type
-                if new_user.user_type == "patient":
-                    patient = Patient.create(
-                        user_id=new_user.user_id,
-                        date_of_birth=dob.isoformat() if dob else None,
-                        gender=gender or None,
-                        contact_number=contact or None,
-                        address=address or None
-                    )
-                    if patient:
-                        st.success("Patient account created successfully! Please log in.")
-                        navigate_to("login")
-                        st.rerun()
-                    else:
-                        st.error("Failed to create patient profile. Please try again.")
+                license_exists = DBManager.fetch_one("SELECT 1 FROM doctors WHERE medical_license_number = ?", (license_id,))
+                if license_exists:
+                    st.error("Medical License ID already exists. Please use a different one.")
+                    return
 
-                elif new_user.user_type == "doctor":
-                    doctor = Doctor.create(
-                        user_id=new_user.user_id,
-                        specialization=specialization,
-                        medical_license_number=license_id,
-                        contact_number=contact or None,
-                        hospital_affiliation=hospital or None
+            try:
+                    # --- Secure password hashing ---
+                    # hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+                    # Create user
+                    new_user = User.create(
+                        username=username,
+                        password=password, # plain text password only!
+                        user_type=user_type.lower(),
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=email
                     )
-                    if doctor:
-                        st.success("Doctor account created successfully! Please log in.")
-                        navigate_to("login")
-                        st.rerun()
-                    else:
-                        st.error("Failed to create doctor profile. Please try again.")
+
+                    if not new_user:
+                        st.error("Registration failed. Please try again.")
+                        return
+
+                    # Create profile based on user type
+                    if new_user.user_type == "patient":
+                        patient = Patient.create(
+                            user_id=new_user.user_id,
+                            date_of_birth=dob.isoformat() if dob else None,
+                            gender=gender or None,
+                            contact_number=contact or None,
+                            address=address or None
+                        )
+                        if patient:
+                            st.success("Patient account created successfully! Please log in.")
+                            navigate_to("login")
+                            st.rerun()
+                        else:
+                             # Cleanup: delete user if patient creation fails
+                            new_user.delete()
+                            st.error("Patient profile creation failed. Please try again.")
+                            return
+
+                    elif new_user.user_type == "doctor":
+                        # license_exists = DBManager.fetch_one("SELECT 1 FROM doctors WHERE medical_license_number = ?", (license_id,))
+                        # if license_exists:
+                        #     st.error("A doctor with this Medical License ID already exists. Please use a different one or log in.")
+                        #     return
+                        doctor = Doctor.create(
+                            user_id=new_user.user_id,
+                            specialization=specialization,
+                            medical_license_number=license_id,
+                            contact_number=contact or None,
+                            hospital_affiliation=hospital or None
+                        )
+                        if doctor:
+                            st.success("Doctor account created successfully! Please log in.")
+                            navigate_to("login")
+                            st.rerun()
+                        # elif error == "duplicate_license":
+                        #     st.error("A doctor with this Medical License ID already exists. Please use a different one or log in.")
+                        #     return
+                        else:
+                            # Cleanup: delete user if doctor creation fails
+                            new_user.delete()
+                            st.error("Doctor profile creation failed. Please try again.")
+                            return
 
             except Exception as e:
-                st.error(f"An unexpected error occurred: {e}")
-                st.exception(e)
+                    st.error(f"An unexpected error occurred: {e}")
+                    st.exception(e)
 
     st.markdown("---")
     st.info("Already have an account?")
