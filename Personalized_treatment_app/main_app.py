@@ -1,7 +1,7 @@
 # main_app.py
 import streamlit as st
 from database.db import init_db
-from pages import home, signup, login, patient_dashboard, doctor_dashboard, view_report, view_patient_recommendation, doctor_patient_profile_view, view_patient_reports_for_doctor
+from pages import home, signup, login, patient_dashboard, doctor_dashboard, view_report, view_patient_recommendation, doctor_patient_profile_view, view_patient_reports_for_doctor,doctor_review_interface
 from services.db_initializer import initialize_app  
 # --- Global App Setup ---
 st.set_page_config(page_title="Personalized Treatment Plans", layout="centered", initial_sidebar_state="collapsed")
@@ -36,9 +36,7 @@ if st.session_state.logged_in:
         elif st.session_state.page == "view_patient_reports_for_doctor":
             view_patient_reports_for_doctor.show_page()
         elif st.session_state.page == "doctor_review_interface":
-            # Assuming you will create this page next, placeholder for now
-            st.info("Doctor Review Interface page coming soon!")
-            # doctor_review_interface.show_page()
+            doctor_review_interface.show_page()
         elif st.session_state.page == "view_patient_recommendation":
             # This page might be reused by doctors to view final recommendations
             view_patient_recommendation.show_page()

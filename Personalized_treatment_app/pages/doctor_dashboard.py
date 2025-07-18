@@ -66,7 +66,7 @@ def show_page():
         key="doctor_dashboard_view_selector"
     )
 
-    render_footer()
+
 
 
     if selected_view == "Assigned Patients":
@@ -89,37 +89,49 @@ def show_page():
                         health_reports = HealthReport.get_reports_by_patient(patient.patient_id)
                         report_name = health_reports[0].file_name if health_reports else "No reports yet"
                         patient_data.append({
-                            "Patient_ID": patient.patient_id,
-                            "Patient Name": f"{patient_user.first_name} {patient_user.last_name}",
-                            "Username": patient_user.username,
-                            "Assigned Date": mapping.assigned_date.split('T')[0]
+                            "patient_id": patient.patient_id,
+                            "patient_name": f"{patient_user.first_name} {patient_user.last_name}",
+                            "username": patient_user.username,
+                            "assigned_date": mapping.assigned_date.split('T')[0]
                         })
             if patient_data:
-                df_patients = pd.DataFrame(patient_data)
-                st.dataframe(df_patients.drop(columns=["Patient_ID"]), use_container_width=True, hide_index=True)
+                # Custom table header
+                col_name, col_username, col_assigned_date, col_profile_btn, col_reports_btn = st.columns([2, 1.5, 1.5, 1.5, 1.5])
+                with col_name: st.markdown("**Patient Name**")
+                with col_username: st.markdown("**Username**")
+                with col_assigned_date: st.markdown("**Assigned Date**")
+                with col_profile_btn: st.markdown("**Patient Profile**")
+                with col_reports_btn: st.markdown("**Patient Reports**")
+                
+                st.markdown("---") # Separator below header
 
-                st.subheader("Actions for Assigned Patients")
-                selected_patient_id = st.selectbox(
-                    "Select a patient to perform actions:",
-                    options=[p["Patient_ID"] for p in patient_data],
-                    format_func=lambda x: next(p['Patient Name'] for p in patient_data if p['Patient_ID'] == x),
-                    key="select_patient_action"
-                )
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("View Patient Profile"):
-                        st.session_state.viewing_patient_id = selected_patient_id
-                        st.session_state.page = "doctor_patient_profile_view"
-                        st.rerun()
-                with col2:
-                    if st.button("View Patient Reports"):
-                        st.session_state.viewing_patient_id = selected_patient_id
-                        st.session_state.page = "view_patient_reports_for_doctor"
-                        st.rerun()
+                # Display patient data with buttons
+                for patient_info in patient_data:
+                    col_name, col_username, col_assigned_date, col_profile_btn, col_reports_btn = st.columns([2, 1.5, 1.5, 1.5, 1.5])
+                    
+                    with col_name:
+                        st.write(patient_info["patient_name"])
+                    with col_username:
+                        st.write(patient_info["username"])
+                    with col_assigned_date:
+                        st.write(patient_info["assigned_date"])
+                    with col_profile_btn:
+                        # Ensure unique keys for buttons
+                        if st.button("View Profile", key=f"view_profile_{patient_info['patient_id']}"):
+                            st.session_state.viewing_patient_id = patient_info["patient_id"]
+                            st.session_state.page = "doctor_patient_profile_view"
+                            st.rerun()
+                    with col_reports_btn:
+                        if st.button("View Reports", key=f"view_reports_{patient_info['patient_id']}"):
+                            st.session_state.viewing_patient_id = patient_info["patient_id"]
+                            st.session_state.page = "view_patient_reports_for_doctor"
+                            st.rerun()
+                st.markdown("---") # Separator below table
 
             else:
                 st.info("No patients found in your assignments.")
+        else:
+            st.info("No patients are currently assigned to you.")
         # else:
         #     st.info("No patients are currently assigned to you. (Placeholder: PatientDoctorMapping needs implementation)")
         #     st.write("Placeholder: Your assigned patients will appear here. You can then navigate to view their reports.")
@@ -142,7 +154,7 @@ def show_page():
             cols = st.columns([0.2, 0.2, 0.2, 0.2, 0.2]) # Adjust column widths as needed
             cols[0].write("**Patient Name**")
             cols[1].write("**Report Name**")
-            cols[2].write("**AI Rec. Date**")
+            cols[2].write("**AI Recommendation Date**")
             cols[3].write("**AI Priority**")
             cols[4].write("**Action**")
 
@@ -169,6 +181,7 @@ def show_page():
                 with cols[4]:
                     if st.button("Review", key=f"review_rec_{rec.recommendation_id}"):
                         st.session_state.review_recommendation_id = rec.recommendation_id
+                        st.session_state.review_report_id = rec.report_id 
                         st.session_state.page="doctor_review_interface"
                         st.rerun()
         else:
@@ -223,3 +236,4 @@ def show_page():
         st.success("You have been logged out.")
         st.session_state.page ="login"
         st.rerun()
+    render_footer()

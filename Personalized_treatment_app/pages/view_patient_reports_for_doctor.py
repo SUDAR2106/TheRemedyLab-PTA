@@ -9,6 +9,11 @@ from models.recommendation import Recommendation # Assuming you have a get_by_re
 from utils.layout import render_header, render_footer
 import os # For file viewing if applicable
 from config import UPLOAD_DIR # For file paths
+import json
+import base64
+from docx import Document
+from io import BytesIO
+from PIL import Image
 
 def show_page():
     render_header()
@@ -52,99 +57,147 @@ def show_page():
     if not reports:
         st.info(f"No reports found for {patient_user.first_name} {patient_user.last_name}.")
     else:
-        reports_data = []
+        st.write("Here are the reports for this patient:")
+        
+        # Define columns for the custom table layout
+        # Report Name, Type, Upload Date, Processing Status, Doctor Review Status, View Report
+        col_names = st.columns([2, 1, 1.2, 1.2, 1.5, 1]) # Adjust widths as needed
+        with col_names[0]: st.markdown("**Report Name**")
+        with col_names[1]: st.markdown("**Type**")
+        with col_names[2]: st.markdown("**Upload Date**")
+        with col_names[3]: st.markdown("**Processing Status**")
+        with col_names[4]: st.markdown("**Doctor Review Status**")
+        with col_names[5]: st.markdown("**View Report**")
+        st.markdown("---") # Separator below header
+
         for report in reports:
-            recommendation = Recommendation.find_by_report_id(report.report_id) # Fetch associated recommendation
+            recommendation = Recommendation.find_by_report_id(report.report_id)
+            doctor_review_status = recommendation.status if recommendation else "N/A"
 
-            reports_data.append({
-                "Report_ID": report.report_id, # Hidden ID for actions
-                "Report Name": report.file_name,
-                "Type": report.report_type,
-                "Upload Date": report.upload_date.split('T')[0] if report.upload_date else "N/A",
-                "Processing Status": report.processing_status,
-                "AI Analysis Status": "Available" if recommendation and recommendation.ai_generated_treatment else "N/A", # Assuming AI analysis fills this
-                "Doctor Review Status": recommendation.status if recommendation else "N/A" # Status from recommendation
-            })
-
-        df_reports = pd.DataFrame(reports_data)
+            cols = st.columns([2, 1, 1.2, 1.2, 1.5, 1]) # Match header widths
+            with cols[0]: st.write(report.file_name)
+            with cols[1]: st.write(report.report_type)
+            with cols[2]: st.write(report.upload_date.split('T')[0] if report.upload_date else "N/A")
+            with cols[3]: st.write(report.processing_status)
+            with cols[4]: st.write(doctor_review_status)
+            with cols[5]:
+                if st.button("Open Report", key=f"open_report_{report.report_id}"):
+                    st.session_state.report_to_display_content = report.report_id
+                    st.rerun() # Rerun to display content in the section below
         
-        # Display the table of reports
-        st.dataframe(
-            df_reports.drop(columns=["Report_ID"]),
-            use_container_width=True,
-            hide_index=True
-        )
+        st.markdown("---") # Separator below table
 
-        st.subheader("Actions for Reports")
-        
-        # Allow selecting a report for actions
-        selected_report_id = st.selectbox(
-            "Select a report:",
-            options=[r["Report_ID"] for r in reports_data],
-            format_func=lambda x: next(r['Report Name'] for r in reports_data if r['Report_ID'] == x),
-            key="select_report_action"
-        )
-        
-        # Fetch the selected report object
-        selected_report = HealthReport.get_by_report_id(selected_report_id)
-        selected_recommendation = Recommendation.find_by_report_id(selected_report_id)
+        # Section to display the selected report's content
+        if "report_to_display_content" in st.session_state and st.session_state.report_to_display_content:
+            selected_report_id_to_display = st.session_state.report_to_display_content
+            report_to_display = HealthReport.get_by_report_id(selected_report_id_to_display)
 
-        col_view_report, col_view_ai, col_review_edit = st.columns(3)
+            if report_to_display:
+                st.subheader(f"Content of: {report_to_display.file_name}")
+                file_path_full = os.path.join(UPLOAD_DIR, report_to_display.file_path.split(os.sep)[-1])
 
-        with col_view_report:
-            if st.button("View Report", key="btn_view_report_doc"):
-                if selected_report:
-                    # Implement logic to view the actual file (e.g., open PDF in new tab, or display image/text)
-                    # For a full viewer, you might need a dedicated component or a simple download link
-                    file_path_full = os.path.join(UPLOAD_DIR, selected_report.file_path.split(os.sep)[-1]) # Adjust path based on how it's stored
-                    if os.path.exists(file_path_full):
-                        st.download_button(
-                            label=f"Download {selected_report.file_name}",
-                            data=open(file_path_full, "rb"),
-                            file_name=selected_report.file_name,
-                            mime=f"application/{selected_report.file_type}",
-                            key=f"download_report_{selected_report.report_id}"
-                        )
-                        st.info("File download initiated. Please check your downloads.")
+                if os.path.exists(file_path_full):
+                    file_extension = report_to_display.file_type.lower()
+
+                    if file_extension == 'json':
+                        try:
+                            with open(file_path_full, 'r', encoding='utf-8') as f:
+                                content = json.load(f)
+                            st.json(content)
+                        except Exception as e:
+                            st.error(f"Error loading JSON file: {e}")
+                            # Provide download as fallback
+                            with open(file_path_full, "rb") as file:
+                                st.download_button(
+                                    label=f"Download {report_to_display.file_name} (Error during display)",
+                                    data=file,
+                                    file_name=report_to_display.file_name,
+                                    mime="application/json",
+                                    key=f"download_json_error_{report_to_display.report_id}"
+                                )
+                    elif file_extension == 'csv':
+                        try:
+                            df = pd.read_csv(file_path_full)
+                            st.dataframe(df, use_container_width=True)
+                        except Exception as e:
+                            st.error(f"Error loading CSV file: {e}")
+                            # Provide download as fallback
+                            with open(file_path_full, "rb") as file:
+                                st.download_button(
+                                    label=f"Download {report_to_display.file_name} (Error during display)",
+                                    data=file,
+                                    file_name=report_to_display.file_name,
+                                    mime="text/csv",
+                                    key=f"download_csv_error_{report_to_display.report_id}"
+                                )
+                    elif file_extension in ['txt', 'log']: # Simple text files
+                        try:
+                            with open(file_path_full, 'r', encoding='utf-8') as f:
+                                content = f.read()
+                            st.text_area("File Content", content, height=300)
+                        except Exception as e:
+                            st.error(f"Error loading text file: {e}")
+                            # Provide download as fallback
+                            with open(file_path_full, "rb") as file:
+                                st.download_button(
+                                    label=f"Download {report_to_display.file_name} (Error during display)",
+                                    data=file,
+                                    file_name=report_to_display.file_name,
+                                    mime="text/plain",
+                                    key=f"download_txt_error_{report_to_display.report_id}"
+                                )
+                    elif file_extension == 'pdf':
+                        try:
+                            with open(file_path_full, "rb") as f:
+                                base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+                            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
+                            st.markdown(pdf_display, unsafe_allow_html=True)
+                        except Exception as e:
+                            st.error(f"Error displaying PDF file: {e}")
+
+                    elif file_extension == 'docx':
+                        try:
+                            doc = Document(file_path_full)
+                            text = "\n".join([para.text for para in doc.paragraphs])
+                            st.text_area("DOCX Content", text, height=400)
+                        except Exception as e:
+                            st.error(f"Error displaying DOCX file: {e}")
+
+                    elif file_extension in ['jpg', 'jpeg', 'png', 'gif']:
+                        st.warning(f"Direct in-app viewing for '{file_extension.upper()}' files is not natively supported by Streamlit without specialized components or external libraries. A download option is provided so your system can open it with the appropriate viewer.")
+                        with open(file_path_full, "rb") as file:
+                            st.download_button(
+                                label=f"Download {report_to_display.file_name}",
+                                data=file,
+                                file_name=report_to_display.file_name,
+                                mime=f"application/{file_extension}", # Use specific mime type if known
+                                key=f"download_file_{report_to_display.report_id}"
+                            )
                     else:
-                        st.error("Report file not found on server.")
+                        st.info(f"File type '{file_extension}' not recognized for in-app display. Offering as download.")
+                        with open(file_path_full, "rb") as file:
+                            st.download_button(
+                                label=f"Download {report_to_display.file_name}",
+                                data=file,
+                                file_name=report_to_display.file_name,
+                                mime="application/octet-stream", # Generic binary
+                                key=f"download_unknown_file_{report_to_display.report_id}"
+                            )
                 else:
-                    st.warning("Please select a report to view.")
-
-        with col_view_ai:
-            if st.button("View AI Analysis", key="btn_view_ai_analysis_doc"):
-                if selected_recommendation and selected_recommendation.ai_generated_treatment:
-                    st.session_state.viewing_recommendation_id = selected_recommendation.recommendation_id
-                    st.session_state.viewing_report_id = selected_report.report_id
-                    # This could navigate to a read-only part of the doctor_review_interface
-                    # or a dedicated AI analysis view
-                    st.info("Navigating to AI Analysis View (part of Review Interface).")
-                    st.session_state.page = "doctor_review_interface"
-                    st.rerun()
-                else:
-                    st.info("No AI analysis available for this report yet.")
-
-        with col_review_edit:
-            if st.button("Review/Edit Recommendation", key="btn_review_edit_rec_doc"):
-                if selected_report:
-                    st.session_state.viewing_report_id = selected_report.report_id
-                    # If a recommendation already exists, load it. Otherwise, the interface can create one.
-                    if selected_recommendation:
-                        st.session_state.viewing_recommendation_id = selected_recommendation.recommendation_id
-                    else:
-                        # Clear existing recommendation ID if none exists for this report
-                        if "viewing_recommendation_id" in st.session_state:
-                            del st.session_state.viewing_recommendation_id
-
-                    st.session_state.page = "doctor_review_interface" # This page will handle creating/editing
-                    st.rerun()
-                else:
-                    st.warning("Please select a report to review.")
-
+                    st.error("Report file not found on server.")
+            else:
+                st.error("Selected report not found.")
+            
+            # Button to clear the displayed content
+            if st.button("Hide Report Content", key="hide_report_content"):
+                st.session_state.report_to_display_content = None
+                st.rerun()
 
     st.markdown("---")
 
     if st.button("Back to Doctor Dashboard", key="back_to_doctor_dashboard_reports"):
+        if "report_to_display_content" in st.session_state:
+            del st.session_state.report_to_display_content # Clean up session state
         del st.session_state.viewing_patient_id # Clean up session state
         st.session_state.page = "doctor_dashboard"
         st.rerun()

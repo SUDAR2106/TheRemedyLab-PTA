@@ -8,3 +8,7 @@ PyMuPDF
 spacy
 pyPDF2
 bcrypt
+BytesIO
+image
+base64
+Pillow
