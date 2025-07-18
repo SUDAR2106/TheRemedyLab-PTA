@@ -101,6 +101,11 @@ class Recommendation:
         if results:
             return [Recommendation(**row) for row in results]
         return []
+    @staticmethod
+    def get_by_recommendation_id(recommendation_id: str) -> 'Recommendation':
+        query = "SELECT * FROM recommendations WHERE recommendation_id = ?"
+        rec_data = DBManager.fetch_one(query, (recommendation_id,))
+        return Recommendation(**rec_data) if rec_data else None
 
     @staticmethod
     def get_approved_for_patient(patient_id: str) -> list[dict]:

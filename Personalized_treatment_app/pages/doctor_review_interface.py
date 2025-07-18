@@ -116,7 +116,7 @@ def show_page():
                     recommendation.modify_and_approve(doctor.doctor_id, modified_treatment, modified_lifestyle, doctor_notes)
                     st.success("Recommendation modified and approved successfully!")
                     st.session_state.page = "doctor_dashboard"
-                    # st.rerun()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Error modifying and approving recommendation: {e}")
         else:

@@ -54,7 +54,7 @@ def show_page():
     # --- Navigation Tabs/Radio Buttons ---
     selected_view = st.radio(
         "Select an option:",
-        ("Upload Report", "My Reports", "My Recommendations"),
+        ("Upload Report", "My Reports"),
         key="patient_dashboard_view_selector"
     )
     if selected_view== "Upload Report":
@@ -132,8 +132,8 @@ def show_page():
                 cols[1].write("**Upload Date**")
                 cols[2].write("**Status**")
                 cols[3].write("**View Report**")
-                cols[4].write("**View Data**")
-                cols[5].write("**View Rec.**")
+                # cols[4].write("**View Data**")
+                cols[4].write("**View Rec.**")
 
                 for report in reports:
                     # Determine display status
@@ -143,14 +143,14 @@ def show_page():
                         if recommendation:
                             if recommendation.status == 'AI_generated':
                                 display_status = "Ready for Doctor Review"
-                            elif recommendation.status in ['approved_by_doctor', 'modified_by_doctor']:
+                            elif recommendation.status in ['approved_by_doctor', 'modified_and_approved_by_doctor']:
                                 display_status = "Recommendations Available"
                             else:
                                 display_status = recommendation.status
                         else:
                             display_status = "Pending AI Analysis"
 
-                    rec_approved = recommendation and recommendation.status in ['approved_by_doctor', 'modified_by_doctor']
+                    rec_approved = recommendation and recommendation.status in ['approved_by_doctor', 'modified_and_approved_by_doctor']
 
                     # Display each row with buttons
                     cols = st.columns([0.2, 0.15, 0.2, 0.15, 0.15, 0.15])
@@ -164,46 +164,53 @@ def show_page():
                             st.session_state.page = "view_report"
                             st.rerun()
 
-                    with cols[4]:
-                        if st.button("View Data", key=f"view_data_{report.report_id}"):
-                            with st.expander(f"Extracted Data for {report.file_name}"):
-                                try:
-                                    st.json(report.get_extracted_data())
-                                except Exception:
-                                    st.warning("Extracted data is not valid JSON.")
-                                    st.text(report.extracted_data_json)
+                    # with cols[4]:
+                    #     if st.button("View Data", key=f"view_data_{report.report_id}"):
+                    #         with st.expander(f"Extracted Data for {report.file_name}"):
+                    #             try:
+                    #                 st.json(report.get_extracted_data())
+                    #             except Exception:
+                    #                 st.warning("Extracted data is not valid JSON.")
+                    #                 st.text(report.extracted_data_json)
 
-                    with cols[5]:
+                    with cols[4]:
                         if st.button("View Rec.", key=f"view_rec_{report.report_id}", disabled=not rec_approved):
                             st.session_state.view_recommendation_report_id = report.report_id
                             st.session_state.page = "view_patient_recommendation"
                             st.rerun()
+                           
+                    st.write("---")  # Add a separator between reports
             else:
                 st.info("No health reports uploaded yet. Upload one using the 'Upload Report' tab.")
         else:
             st.error("Could not retrieve patient data.")
 
-                
+        # Debug: Show current session state
+        st.write("**CURRENT SESSION STATE:**")
+        print("🔍 Current session state:")
+        for key, value in st.session_state.items():
+            if not key.startswith('_'):  # Skip internal streamlit keys
+                st.write(f"{key}: {value}")   
 
-    elif selected_view == "My Recommendations":
-        st.header("My Approved Recommendations")
-        # Assuming Patient.get_approved_recommendations() returns a list of dicts suitable for DataFrame
-        approved_recs_data = current_patient.get_approved_recommendations()
+    # elif selected_view == "My Recommendations":
+    #     st.header("My Approved Recommendations")
+    #     # Assuming Patient.get_approved_recommendations() returns a list of dicts suitable for DataFrame
+    #     approved_recs_data = current_patient.get_approved_recommendations()
 
-        if approved_recs_data:
-            df_approved_recs = pd.DataFrame(approved_recs_data)
+    #     if approved_recs_data:
+    #         df_approved_recs = pd.DataFrame(approved_recs_data)
             
-            # Adjust column names for display if needed
-            display_cols = ['Report Name', 'Doctor Name', 'approved_treatment', 'approved_lifestyle', 'doctor_notes', 'reviewed_date']
+    #         # Adjust column names for display if needed
+    #         display_cols = ['Report Name', 'Doctor Name', 'approved_treatment', 'approved_lifestyle', 'doctor_notes', 'reviewed_date']
             
-            # Ensure all display_cols exist in the DataFrame, add N/A if not
-            for col in display_cols:
-                if col not in df_approved_recs.columns:
-                    df_approved_recs[col] = "N/A"
+    #         # Ensure all display_cols exist in the DataFrame, add N/A if not
+    #         for col in display_cols:
+    #             if col not in df_approved_recs.columns:
+    #                 df_approved_recs[col] = "N/A"
 
-            st.dataframe(df_approved_recs[display_cols])
-        else:
-            st.info("No approved recommendations available yet.")
+    #         st.dataframe(df_approved_recs[display_cols])
+    #     else:
+    #         st.info("No approved recommendations available yet.")
 
     st.markdown("---")
     if st.button("Logout", type="secondary", key="patient_dashboard_logout_btn_bottom"):

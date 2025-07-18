@@ -223,9 +223,9 @@ def show_page():
                 with cols[2]: st.write(rec.reviewed_date.split('T')[0] if rec.reviewed_date else "N/A")
                 with cols[3]: st.write(rec.status)
                 with cols[4]:
-                    if st.button("View", key=f"view_reviewed_rec_{rec.recommendation_id}"):
-                        st.session_state.view_recommendation_report_id = rec.report_id # Re-use patient view page to show final rec
-                        st.session_state.page="view_patient_recommendation" # Can reuse this page
+                    if st.button("View Your Recommedations", key=f"view_reviewed_rec_{rec.recommendation_id}"):
+                        st.session_state.view_reviewed_recommendation_id = rec.recommendation_id 
+                        st.session_state.page="doctor_reviewed_recommendations_view" # Can reuse this page
                         st.rerun()
         else:
             st.info("You have not reviewed any recommendations yet.")
