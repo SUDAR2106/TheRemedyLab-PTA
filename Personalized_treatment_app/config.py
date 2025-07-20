@@ -13,3 +13,5 @@ UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
 
 # Create the upload directory if it doesn't exist
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')

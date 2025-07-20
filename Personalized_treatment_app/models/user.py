@@ -5,7 +5,8 @@ import datetime
 # Import the security utility functions
 from utils import security # Assuming utils/security.py is in a 'utils' directory relative to where your models are run
 from database.db_utils import DBManager
-from services.userid_generator_service import generate_custom_user_id
+
+
 
 class User:
     def __init__(self, user_id: str, username: str, password_hash: str, user_type: str, 
@@ -28,6 +29,7 @@ class User:
         Creates a new user, hashes the password using security utility, and saves them to the database.
         Returns a User object if successful, None otherwise.
         """
+        from services.userid_generator_service import generate_custom_user_id
         user_id = generate_custom_user_id(user_type)
         hashed_password = security.hash_password(password) # Using the utility function
         created_at = datetime.datetime.now(datetime.timezone.utc).isoformat()

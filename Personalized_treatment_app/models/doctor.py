@@ -1,10 +1,8 @@
 # models/doctor.py
 import uuid
 from database.db_utils import DBManager
-from models.patient_doctor_mapping import PatientDoctorMapping # Importing the mapping model
-from models.patient import Patient # Importing Patient model for type hinting
-from models.recommendation import Recommendation # Importing Recommendation model for type hinting
-from models.health_report import HealthReport # Importing HealthReport model for type hinting
+
+    
 class Doctor:
     def __init__(self, doctor_id: str, user_id: str, medical_license_number: str = None, specialization: str = None, contact_number: str = None, hospital_affiliation: str = None, is_available: int = 1, last_assignment_date: str = None):
         self.doctor_id = doctor_id
@@ -15,6 +13,12 @@ class Doctor:
         self.hospital_affiliation = hospital_affiliation
         self.is_available = is_available
         self.last_assignment_date = last_assignment_date # This will be ISO format string
+
+    from models.health_report import HealthReport
+    from models.patient_doctor_mapping import PatientDoctorMapping # Importing the mapping model
+    from models.patient import Patient # Importing Patient model for type hinting
+    from models.recommendation import Recommendation # Importing Recommendation model for type hinting
+
 
     @classmethod
     def create(cls, user_id: str, medical_license_number: str = None, specialization: str = None, contact_number: str = None, hospital_affiliation: str = None, is_available: int = 1, last_assignment_date: str = None) -> 'Doctor':
@@ -105,6 +109,8 @@ class Doctor:
         return DBManager.execute_query(query, (self.doctor_id,))
 
     def get_assigned_patients(self) -> list['Patient']:
+
+        from models.patient_doctor_mapping import PatientDoctorMapping
         """
         Retrieves a list of Patient objects that are currently assigned to this doctor.
         Delegates to PatientDoctorMapping model.

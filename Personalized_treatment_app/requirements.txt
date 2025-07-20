@@ -12,3 +12,5 @@ BytesIO
 image
 base64
 Pillow
+dotenv
+openai
