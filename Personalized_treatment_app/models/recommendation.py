@@ -26,31 +26,25 @@ class Recommendation:
         self.created_at = created_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
         self.last_updated_at = last_updated_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    @staticmethod
-    def create(report_id: str, patient_id: str, ai_treatment: str,
-               ai_lifestyle: str, ai_priority: str) -> 'Recommendation':
+    @classmethod
+    def create(cls, report_id: str, patient_id: str, doctor_id: str,  # doctor_id can be None
+            ai_generated_treatment: str, ai_generated_lifestyle: str,
+            ai_generated_priority: str, status: str = 'AI_generated') -> 'Recommendation':
         recommendation_id = str(uuid.uuid4())
-        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        created_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
         query = """
-            INSERT INTO recommendations (
-                recommendation_id, report_id, patient_id, ai_generated_treatment,
-                ai_generated_lifestyle, ai_generated_priority, status,
-                created_at, last_updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO recommendations (recommendation_id, report_id, patient_id, doctor_id,
+                                        ai_generated_treatment, ai_generated_lifestyle,
+                                        ai_generated_priority, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
-        success = DBManager.execute_query(query, (
-            recommendation_id, report_id, patient_id,
-            ai_treatment, ai_lifestyle, ai_priority,
-            'AI_generated', now, now
-        ))
-
-        if success:
-            print(f"✅ Recommendation created for report {report_id}")
-            return Recommendation(
-                recommendation_id, report_id, patient_id,
-                ai_treatment, ai_lifestyle, ai_priority,
-                status='AI_generated', created_at=now, last_updated_at=now
-            )
+        params = (recommendation_id, report_id, patient_id, doctor_id,
+                ai_generated_treatment, ai_generated_lifestyle,
+                ai_generated_priority, status, created_at)
+        if DBManager.execute_query(query, params):
+            return cls(recommendation_id, report_id, patient_id, doctor_id,
+                    ai_generated_treatment, ai_generated_lifestyle,
+                    ai_generated_priority, status, created_at)
         return None
 
     @staticmethod
@@ -79,7 +73,7 @@ class Recommendation:
         """
         query = """
             SELECT * FROM recommendations
-            WHERE doctor_id = ? AND status = 'AI_generated'
+            WHERE doctor_id = ? AND status = 'pending_doctor_review'
             ORDER BY created_at DESC
         """
         recs_data = DBManager.fetch_all(query, (doctor_id,))

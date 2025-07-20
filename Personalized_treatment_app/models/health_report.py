@@ -3,11 +3,11 @@ import uuid
 import json
 from datetime import datetime
 from database.db_utils import DBManager
-from services.document_parser import DocumentParser  # 🔁 At top of file
+
 import json
 import os
 from config import UPLOAD_DIR  # Ensure this is imported to use the upload directory path
-from models.recommendation import Recommendation
+
 
 class HealthReport:
     def __init__(self, report_id=None, patient_id=None, uploaded_by=None, report_type=None,file_type=None,
@@ -36,8 +36,10 @@ class HealthReport:
 
     def save(self) -> bool:
         """Saves a new health report or updates an existing one in the database."""
-        if self.report_id:
+        if not self.report_id:
+            return False  # Cannot save without a report_id
             # Check if report exists to decide between INSERT and UPDATE
+        try:
             existing_report = DBManager.fetch_one("SELECT report_id FROM health_reports WHERE report_id = ?", (self.report_id,))
 
             if existing_report:
@@ -58,19 +60,19 @@ class HealthReport:
                 """
                 params = (self.report_id, self.patient_id, self.uploaded_by, self.report_type,
                           self.upload_date, self.file_name, self.file_type, self.file_path, self.extracted_data_json, self.processing_status, self.assigned_doctor_id)
-                try:
-                    print(f"Saving report to DB with report_id = {self.report_id}")
-                    print("SQL params:", params)
+                
+            print(f"Saving report to DB with report_id = {self.report_id}")
+            print("SQL params:", params)
 
-                    success = DBManager.execute_query(query, params)
+            success = DBManager.execute_query(query, params)
 
-                    if success:
-                        print("✅ Report saved.")
-                    else:
-                        print("❌ DBManager returned False")
+            if success:
+                print("✅ Report saved.")
+            else:
+                print("❌ DBManager returned False")
 
-                    return success
-                except Exception as e:
+            return success
+        except Exception as e:
                     print(f"❌ Exception in HealthReport.save(): {e}")
                     import traceback
                     traceback.print_exc()
@@ -80,6 +82,7 @@ class HealthReport:
     
     @staticmethod
     def upload_new_report(patient_id, uploaded_by, uploaded_file, report_type, description=None):
+        from services.document_parser import DocumentParser
         """
         Handles saving the uploaded file, extracting metrics,
         and saving the full report with extracted data to the database.
@@ -97,38 +100,38 @@ class HealthReport:
                 f.write(uploaded_file.getbuffer())
                 print(f"✅ File saved to: {file_path}")
             
-            # Extract metrics and patient info
-            file_type = file_name.split('.')[-1].lower()  # Get file type from name
-            extracted = DocumentParser.parse_report(file_path)
-            # Debug print
-            print("📊 Extracted data from parser:", extracted)
-            if extracted is None:
-                print("⚠️ DocumentParser returned None")
-            elif isinstance(extracted, dict):
-                print("✅ Parsing succeeded with keys:", list(extracted.keys()))
-            else:
-                print("⚠️ Unexpected format of extracted data:", type(extracted))
+            # # Extract metrics and patient info
+            # file_type = file_name.split('.')[-1].lower()  # Get file type from name
+            # extracted = DocumentParser.parse_report(file_path)
+            # # Debug print
+            # print("📊 Extracted data from parser:", extracted)
+            # if extracted is None:
+            #     print("⚠️ DocumentParser returned None")
+            # elif isinstance(extracted, dict):
+            #     print("✅ Parsing succeeded with keys:", list(extracted.keys()))
+            # else:
+            #     print("⚠️ Unexpected format of extracted data:", type(extracted))
 
-            extracted_json = json.dumps(extracted, indent=2)
+            # extracted_json = json.dumps(extracted, indent=2)
 
+ # Only create an entry with minimal info
             report = HealthReport(
                 patient_id=patient_id,
                 uploaded_by=uploaded_by,
                 report_type=report_type,
                 file_name=file_name,
                 file_path=file_path,
-                file_type=file_type,
-                extracted_data_json=extracted_json,
-                processing_status="extracted",
+                file_type=file_name.split('.')[-1].lower(),  # Get file type from name
+                extracted_data_json="{}",  # Start with empty JSON""
+                processing_status="pending_extraction",  # Initial status
                 assigned_doctor_id=None  # Default to None, can be updated later
             )
 
             if report.save():
-                # Lazy import auto_assign_doctor to avoid circular dependency
-                # as auto_allocator imports HealthReport
-                from services.auto_allocator import auto_assign_doctor
-                print(f"Triggering auto-allocation for report {report.report_id}...")
-                auto_assign_doctor(report.report_id)
+                print(f"Triggering document processing pipeline for report {report.report_id}...")
+                from services.document_parser import DocumentParser # Lazy import
+                # Process the report to extract data and metrics
+                DocumentParser.process_report_pipeline(report.report_id)
                 print("✅ Report uploaded and saved successfully.")
                 # Return True to indicate successful upload and trigger auto-allocation
                 return True # Indicate successful upload and trigger
@@ -204,6 +207,7 @@ class HealthReport:
         return report_objects
     #Auto-allocation will save assigned_doctor_id to the health_reports table
     # so we can retrieve reports by assigned doctor later.
+
     def update(self) -> bool:
         """Updates the entire HealthReport record in the database."""
         query = """
@@ -263,6 +267,7 @@ class HealthReport:
         return json.loads(self.extracted_data_json) if self.extracted_data_json else {}
     
     def get_recommendation(self):
+        from models.recommendation import Recommendation
         """Returns the associated recommendation for this report, if it exists."""
         return Recommendation.find_by_report_id(self.report_id)
 
@@ -272,6 +277,7 @@ class HealthReport:
             "patient_id": self.patient_id,
             "uploaded_by": self.uploaded_by,
             "report_type": self.report_type,
+            "file_type": self.file_type,
             "upload_date": self.upload_date,
             "file_name": self.file_name,
             "file_path": self.file_path,

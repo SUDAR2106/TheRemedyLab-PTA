@@ -12,34 +12,42 @@ class PatientDoctorMapping:
         self.is_active = is_active # 1 for active, 0 for inactive/past assignments
 
     def save(self) -> bool:
-        """Saves a new mapping or updates an existing one. Handles UNIQUE constraint for active mappings."""
-        # Before inserting a new active mapping, ensure no active mapping already exists for this pair
-        if self.is_active == 1:
-            # Deactivate any existing active mapping for this patient-doctor pair
-            deactivate_query = """
-                UPDATE patient_doctor_mapping
-                SET is_active = 0
-                WHERE patient_id = ? AND doctor_id = ? AND is_active = 1
-            """
-            DBManager.execute_query(deactivate_query, (self.patient_id, self.doctor_id))
-         # Check if this specific mapping already exists
-        existing_mapping = DBManager.fetch_one("SELECT mapping_id FROM patient_doctor_mapping WHERE mapping_id = ?", (self.mapping_id,))
-        if existing_mapping:
-            query = """
-                UPDATE patient_doctor_mapping
-                SET patient_id = ?, doctor_id = ?, assigned_date = ?, is_active = ?
-                WHERE mapping_id = ?
-            """
-            params = (self.patient_id, self.doctor_id, self.assigned_date, self.is_active, self.mapping_id)
-        else:
-            query = """
-                INSERT INTO patient_doctor_mapping (mapping_id, patient_id, doctor_id, assigned_date, is_active)
-                VALUES (?, ?, ?, ?, ?)
-            """
-            params = (self.mapping_id, self.patient_id, self.doctor_id, self.assigned_date, self.is_active)
-        
-        return DBManager.execute_query(query, params)
-    
+        try:
+            """Saves a new mapping or updates an existing one. Handles UNIQUE constraint for active mappings."""
+            # Before inserting a new active mapping, ensure no active mapping already exists for this pair
+            if self.is_active == 1:
+                # Deactivate any existing active mapping for this patient-doctor pair
+                deactivate_query = """
+                    UPDATE patient_doctor_mapping
+                    SET is_active = 0
+                    WHERE patient_id = ? AND doctor_id = ? AND is_active = 1
+                """
+                DBManager.execute_query(deactivate_query, (self.patient_id, self.doctor_id))
+            # Check if this specific mapping already exists
+            existing_mapping = DBManager.fetch_one("SELECT mapping_id FROM patient_doctor_mapping WHERE mapping_id = ?", (self.mapping_id,))
+            if existing_mapping:
+                query = """
+                    UPDATE patient_doctor_mapping
+                    SET patient_id = ?, doctor_id = ?, assigned_date = ?, is_active = ?
+                    WHERE mapping_id = ?
+                """
+                params = (self.patient_id, self.doctor_id, self.assigned_date, self.is_active, self.mapping_id)
+            else:
+                query = """
+                    INSERT INTO patient_doctor_mapping (mapping_id, patient_id, doctor_id, assigned_date, is_active)
+                    VALUES (?, ?, ?, ?, ?)
+                """
+                params = (self.mapping_id, self.patient_id, self.doctor_id, self.assigned_date, self.is_active)
+            print(f"Executing query: {query}")
+            print(f"With params: {params}")
+            return DBManager.execute_query(query, params)
+            print(f"Query execution result: {result}")
+            return result
+        except Exception as e:
+            print(f"❌ Exception in PatientDoctorMapping.save(): {e}")
+            import traceback
+            traceback.print_exc()
+            return False
     @staticmethod
     def create(patient_id: str, doctor_id: str, is_active: bool = True) -> bool:
         """
