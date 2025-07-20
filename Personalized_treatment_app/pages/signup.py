@@ -8,8 +8,10 @@ from models.user import User
 from models.patient import Patient
 from models.doctor import Doctor
 from utils.layout import render_header, render_footer
+import os
 
 def app(navigate_to):
+   
     render_header()
     st.title("📝 Sign Up")
     st.markdown("Create your account to get started.")

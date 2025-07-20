@@ -1,4 +1,4 @@
-from turtle import st
+
 import uuid
 import datetime
 from database.db_utils import DBManager
@@ -47,11 +47,11 @@ class Recommendation:
                     ai_generated_priority, status, created_at)
         return None
 
-    @staticmethod
-    def get_by_id(recommendation_id: str) -> 'Recommendation':
-        query = "SELECT * FROM recommendations WHERE recommendation_id = ?"
-        rec_data = DBManager.fetch_one(query, (recommendation_id,))
-        return Recommendation(**rec_data) if rec_data else None
+    # @staticmethod
+    # def get_by_id(recommendation_id: str) -> 'Recommendation':
+    #     query = "SELECT * FROM recommendations WHERE recommendation_id = ?"
+    #     rec_data = DBManager.fetch_one(query, (recommendation_id,))
+    #     return Recommendation(**rec_data) if rec_data else None
 
     @staticmethod
     def find_by_report_id(report_id: str) -> 'Recommendation':
@@ -88,7 +88,7 @@ class Recommendation:
         """
         query = """
             SELECT * FROM recommendations
-            WHERE doctor_id = ? AND status IN ('approved_by_doctor', 'modified_and_approved_by_doctor')
+            WHERE doctor_id = ? AND status IN ('approved_by_doctor', 'modified_and_approved_by_doctor', 'rejected_by_doctor')
             ORDER BY reviewed_date DESC
         """
         results = DBManager.fetch_all(query, (doctor_id,))
@@ -133,6 +133,7 @@ class Recommendation:
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         self.last_updated_at = now
         self.reviewed_date = now
+
         self.doctor_id = doctor_id or self.doctor_id
         self.doctor_notes = doctor_notes if doctor_notes is not None else self.doctor_notes
         self.approved_treatment = approved_treatment if approved_treatment is not None else self.approved_treatment
@@ -181,6 +182,20 @@ class Recommendation:
             approved_treatment=approved_treatment,
             approved_lifestyle=approved_lifestyle
         )
+    
+    def reject(self, doctor_id: str, doctor_notes: str = "") -> bool:
+        """
+        Rejects the AI-generated recommendations.
+        """
+        # When rejecting, clear approved treatment/lifestyle as they are not "approved"
+        return self.update_status(
+            new_status="rejected_by_doctor",
+            doctor_id=doctor_id,
+            doctor_notes=doctor_notes,
+            approved_treatment=None, # Clear any previous approved content
+            approved_lifestyle=None  # Clear any previous approved content
+        )
+
 
     def to_dict(self):
         return {

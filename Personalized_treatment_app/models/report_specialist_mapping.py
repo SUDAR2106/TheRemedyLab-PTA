@@ -35,3 +35,11 @@ class ReportSpecialistMapping:
         """Deletes a report specialist mapping entry."""
         query = "DELETE FROM report_specialist_mapping WHERE report_type = ?"
         return DBManager.execute_query(query, (report_type,))
+    
+    @staticmethod
+    def has_any_mappings() -> bool:
+        """
+        Checks if any report-specialist mappings already exist in the table.
+        """
+        result = DBManager.fetch_one("SELECT 1 FROM report_specialist_mapping LIMIT 1")
+        return result is not None

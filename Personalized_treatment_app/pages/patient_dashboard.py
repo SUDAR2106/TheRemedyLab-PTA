@@ -150,7 +150,7 @@ def show_page():
                         else:
                             display_status = "Pending AI Analysis"
 
-                    rec_approved = recommendation and recommendation.status in ['approved_by_doctor', 'modified_and_approved_by_doctor']
+                    rec_approved = recommendation and recommendation.status in ['approved_by_doctor', 'modified_and_approved_by_doctor', 'rejected_by_doctor']
 
                     # Display each row with buttons
                     cols = st.columns([0.2, 0.15, 0.2, 0.15, 0.15, 0.15])
@@ -164,15 +164,7 @@ def show_page():
                             st.session_state.page = "view_report"
                             st.rerun()
 
-                    # with cols[4]:
-                    #     if st.button("View Data", key=f"view_data_{report.report_id}"):
-                    #         with st.expander(f"Extracted Data for {report.file_name}"):
-                    #             try:
-                    #                 st.json(report.get_extracted_data())
-                    #             except Exception:
-                    #                 st.warning("Extracted data is not valid JSON.")
-                    #                 st.text(report.extracted_data_json)
-
+         
                     with cols[4]:
                         if st.button("View Rec.", key=f"view_rec_{report.report_id}", disabled=not rec_approved):
                             st.session_state.view_recommendation_report_id = report.report_id
@@ -192,25 +184,6 @@ def show_page():
             if not key.startswith('_'):  # Skip internal streamlit keys
                 st.write(f"{key}: {value}")   
 
-    # elif selected_view == "My Recommendations":
-    #     st.header("My Approved Recommendations")
-    #     # Assuming Patient.get_approved_recommendations() returns a list of dicts suitable for DataFrame
-    #     approved_recs_data = current_patient.get_approved_recommendations()
-
-    #     if approved_recs_data:
-    #         df_approved_recs = pd.DataFrame(approved_recs_data)
-            
-    #         # Adjust column names for display if needed
-    #         display_cols = ['Report Name', 'Doctor Name', 'approved_treatment', 'approved_lifestyle', 'doctor_notes', 'reviewed_date']
-            
-    #         # Ensure all display_cols exist in the DataFrame, add N/A if not
-    #         for col in display_cols:
-    #             if col not in df_approved_recs.columns:
-    #                 df_approved_recs[col] = "N/A"
-
-    #         st.dataframe(df_approved_recs[display_cols])
-    #     else:
-    #         st.info("No approved recommendations available yet.")
 
     st.markdown("---")
     if st.button("Logout", type="secondary", key="patient_dashboard_logout_btn_bottom"):

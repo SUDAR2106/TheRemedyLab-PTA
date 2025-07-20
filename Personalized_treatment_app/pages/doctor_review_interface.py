@@ -5,6 +5,7 @@ from models.recommendation import Recommendation
 from models.health_report import HealthReport
 from models.patient import Patient
 from models.user import User
+from models.doctor import Doctor
 from utils.layout import render_header, render_footer
 from models.doctor import Doctor # Although current_doctor is from session, useful for type hints/future use
 import json # For parsing extracted_data_json
@@ -12,6 +13,8 @@ from utils.helpers import format_date_for_display
 
 def show_page():
     render_header()
+
+    
     """
     Displays an interface for doctors to review, approve, modify, or reject AI-generated recommendations.
     """
@@ -21,6 +24,15 @@ def show_page():
         st.session_state.page = "login"
         st.rerun()
         return
+    # --- Check if doctor_id is in session state ---
+    current_user = st.session_state.logged_in_user
+    current_doctor = Doctor.get_by_user_id(current_user.user_id)
+
+    if not current_doctor:
+        st.error("Doctor profile not found. Please contact support.")
+        st.session_state.logged_in_user = None
+        st.session_state.page = "login"
+        st.stop()
 
     # --- Retrieve Recommendation ID from Session State ---
     # Ensure a recommendation ID is passed from the dashboard
@@ -32,10 +44,11 @@ def show_page():
         return
 
     rec_id = st.session_state.review_recommendation_id
-    report_id = st.session_state.review_report_id # Assuming report_id is also passed for context
+    # report_id = st.session_state.review_report_id # Assuming report_id is also passed for context
 
     # --- Fetch Recommendation and Related Data ---
-    recommendation = Recommendation.get_by_id(rec_id) # Assuming get_by_id is implemented or use get_by_report_id if that's how you link
+    recommendation = Recommendation.get_by_recommendation_id(rec_id) # Assuming get_by_id is implemented or use get_by_report_id if that's how you link
+    
     if not recommendation:
         st.error("Recommendation not found.")
         if st.button("Go to Doctor Dashboard"):
@@ -46,19 +59,21 @@ def show_page():
     report = HealthReport.find_by_id(recommendation.report_id)
 
     patient = Patient.get_by_patient_id(recommendation.patient_id)
+    # Ensure report and patient data is available
     if not report or not patient:
         st.error("Related report or patient data not found.")
         if st.button("Go to Doctor Dashboard"):
             st.session_state.page = "doctor_dashboard"
             st.rerun()
         return
+    # Ensure patient user info is available
     patient_user = User.get_by_user_id(patient.user_id)
     if not patient_user:
         st.error("Patient user info not found.")
         return
-        st.title("Review AI-Generated Recommendation")
-        st.markdown("---")
-
+        
+    st.title("Review AI-Generated Recommendation")
+    st.markdown("---")
     # --- Display Basic Info ---
     st.subheader(f"Patient: {patient_user.first_name} {patient_user.last_name}")
     st.write(f"**Report:** {report.file_name} (Uploaded: {format_date_for_display(report.upload_date)})")
@@ -94,7 +109,11 @@ def show_page():
         if st.button("Approve As Is", key="approve_button"):
             try:
                 # Call the method on the recommendation object
-                recommendation.approve(st.session_state.user_id, doctor_notes)
+                if not current_doctor:
+                    st.error("Doctor record not found for this user.")
+                    return
+                # Call the approve method with modified content
+                recommendation.approve(current_doctor.doctor_id, doctor_notes)
                 st.success("Recommendation approved successfully!")
                 st.session_state.page = "doctor_dashboard"
                 st.rerun()
@@ -112,7 +131,7 @@ def show_page():
                     if not doctor:
                         st.error("Doctor record not found for this user.")
                         return
-                    # Call the method with modified content
+                    # Call the modify_and_approve method with modified content
                     recommendation.modify_and_approve(doctor.doctor_id, modified_treatment, modified_lifestyle, doctor_notes)
                     st.success("Recommendation modified and approved successfully!")
                     st.session_state.page = "doctor_dashboard"
@@ -126,8 +145,11 @@ def show_page():
     with col3:
         if st.button("Reject", key="reject_button"):
             try:
+                if not current_doctor:
+                    st.error("Doctor record not found for this user.")
+                    return
                 # Call the reject method
-                recommendation.reject(st.session_state.user_id, doctor_notes)
+                recommendation.reject(current_doctor.doctor_id, doctor_notes)
                 st.warning("Recommendation rejected.")
                 st.session_state.page = "doctor_dashboard"
                 st.rerun()

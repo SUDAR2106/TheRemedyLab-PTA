@@ -152,6 +152,5 @@ def populate_default_specialist_mappings():
         if not ReportSpecialistMapping.get_specialization_by_report_type(report_type):
             ReportSpecialistMapping.create(report_type, specialization)
             print(f"Added mapping: {report_type} -> {specialization}")
-        else:
-            print(f"Mapping already exists for {report_type}.")
-
+    else:
+        print("All default mappings already exist or were added successfully.")
