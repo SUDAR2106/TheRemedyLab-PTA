@@ -61,20 +61,21 @@ def show_page():
         
         # Define columns for the custom table layout
         # Report Name, Type, Upload Date, Processing Status, Doctor Review Status, View Report
-        col_names = st.columns([2, 1, 1.2, 1.2, 1.5, 1]) # Adjust widths as needed
+        col_names = st.columns([2, 2, 2, 2, 2, 2,2]) # Adjust widths as needed
         with col_names[0]: st.markdown("**Report Name**")
         with col_names[1]: st.markdown("**Type**")
         with col_names[2]: st.markdown("**Upload Date**")
         with col_names[3]: st.markdown("**Processing Status**")
         with col_names[4]: st.markdown("**Doctor Review Status**")
         with col_names[5]: st.markdown("**View Report**")
+        with col_names[6]: st.markdown("**AI Status / Retry**")
         st.markdown("---") # Separator below header
 
         for report in reports:
             recommendation = Recommendation.find_by_report_id(report.report_id)
             doctor_review_status = recommendation.status if recommendation else "N/A"
 
-            cols = st.columns([2, 1, 1.2, 1.2, 1.5, 1]) # Match header widths
+            cols = st.columns([2, 2, 2, 2, 2, 2,2]) # Match header widths
             with cols[0]: st.write(report.file_name)
             with cols[1]: st.write(report.report_type)
             with cols[2]: st.write(report.upload_date.split('T')[0] if report.upload_date else "N/A")
@@ -84,6 +85,22 @@ def show_page():
                 if st.button("Open Report", key=f"open_report_{report.report_id}"):
                     st.session_state.report_to_display_content = report.report_id
                     st.rerun() # Rerun to display content in the section below
+            with cols[6]:
+                if report.processing_status in ["pending_ai_analysis", "extracted"] and doctor_review_status != "pending_doctor_review":
+                    if st.button("Retry AI", key=f"retry_ai_{report.report_id}"):
+                        from services.document_parser import DocumentParser#Lazy import
+                        success = DocumentParser.process_report_pipeline(report.report_id)
+                        if success:
+                            st.success("✅ AI recommendation successfully regenerated.")
+                            st.rerun()
+                        else:
+                            st.error("❌ AI generation failed.")
+                elif report.processing_status == "pending_doctor_review":
+                    st.write("✅ Ready")
+                elif report.processing_status == "doctor_assigned":
+                    st.write("⏳ Waiting for AI")
+                else:
+                    st.write("—")      
         
         st.markdown("---") # Separator below table
 

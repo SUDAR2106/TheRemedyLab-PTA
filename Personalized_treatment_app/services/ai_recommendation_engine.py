@@ -4,11 +4,11 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from config import OPENAI_API_KEY
+# from config import OPENAI_API_KEY
 
 # Load API key from .env
 load_dotenv()
-api_key = OPENAI_API_KEY
+api_key = os.getenv("OPENAI_API_KEY")
 
 # Ensure API key is available
 if not api_key:
