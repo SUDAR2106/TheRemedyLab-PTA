@@ -29,27 +29,43 @@ def show_page():
         st.session_state.logged_in_user = None
         st.session_state.page = "login"
         st.stop()
-
-    st.title(f"👋 Welcome, {current_user.first_name} {current_user.last_name}!")
-    st.subheader("Patient Dashboard")
-
-    st.markdown("---")
-
-    # --- Patient Information Section ---
-    st.header("My Profile")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write(f"**Username:** {current_user.username}")
-        st.write(f"**First Name:** {current_user.first_name}")
-        st.write(f"**Last Name:** {current_user.last_name}")
-        st.write(f"**Email:** {current_user.email if current_user.email else 'N/A'}")
-    with col2:
-        st.write(f"**Date of Birth:** {current_patient.date_of_birth if current_patient.date_of_birth else 'N/A'}")
-        st.write(f"**Gender:** {current_patient.gender if current_patient.gender else 'N/A'}")
-        st.write(f"**Contact:** {current_patient.contact_number if current_patient.contact_number else 'N/A'}")
-        st.write(f"**Address:** {current_patient.address if current_patient.address else 'N/A'}")
     
+    
+    st.markdown("""
+    <style>
+        .dashboard-title {{
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }}
+       
+    </style>
+
+    <div class="dashboard-title">Patient Dashboard</div>
+
+""", unsafe_allow_html=True)
+
+
+    
+
     st.markdown("---")
+
+    # # --- Patient Information Section ---
+    # # st.header("My Profile")
+    # col1, col2 = st.columns(2)
+    # with col1:
+    #     st.write(f"**Username:** {"Hello " + current_user.username}")
+    #     st.write(f"**First Name:** {current_user.first_name}")
+    #     st.write(f"**Last Name:** {current_user.last_name}")
+    #     # st.write(f"**Email:** {current_user.email if current_user.email else 'N/A'}")
+    # with col2:
+    #     st.write(f"**Date of Birth:** {current_patient.date_of_birth if current_patient.date_of_birth else 'N/A'}")
+    #     st.write(f"**Gender:** {current_patient.gender if current_patient.gender else 'N/A'}")
+    #     st.write(f"**Contact:** {current_patient.contact_number if current_patient.contact_number else 'N/A'}")
+    #     st.write(f"**Address:** {current_patient.address if current_patient.address else 'N/A'}")
+    
+    # st.markdown("---")
 
     # --- Navigation Tabs/Radio Buttons ---
     selected_view = st.radio(
@@ -87,8 +103,8 @@ def show_page():
             if not uploaded_file:
                 st.error("Please upload a file.")
             else:
-              st.write("Uploaded file name:", uploaded_file.name)
-              st.write("Reading file buffer size:", len(uploaded_file.getbuffer()))
+            #   st.write("Uploaded file name:", uploaded_file.name)
+            #   st.write("Reading file buffer size:", len(uploaded_file.getbuffer()))
 
               patient = Patient.get_by_user_id(st.session_state.user_id)
               print("🔍 Retrieved patient:", patient)
@@ -105,7 +121,7 @@ def show_page():
                         description=description  # if supported in DB
                     )
                 print("✅ Upload success status:", success)
-                st.success("Report uploaded and processed successfully!")
+                # st.success("Report uploaded and processed successfully!")
                 if success:
                     st.success("Report uploaded and processed successfully!")
                     # st.rerun()
@@ -177,18 +193,18 @@ def show_page():
         else:
             st.error("Could not retrieve patient data.")
 
-        # Debug: Show current session state
-        st.write("**CURRENT SESSION STATE:**")
-        print("🔍 Current session state:")
-        for key, value in st.session_state.items():
-            if not key.startswith('_'):  # Skip internal streamlit keys
-                st.write(f"{key}: {value}")   
+        # # Debug: Show current session state
+        # st.write("**CURRENT SESSION STATE:**")
+        # print("🔍 Current session state:")
+        # for key, value in st.session_state.items():
+        #     if not key.startswith('_'):  # Skip internal streamlit keys
+        #         st.write(f"{key}: {value}")   
 
 
-    st.markdown("---")
-    if st.button("Logout", type="secondary", key="patient_dashboard_logout_btn_bottom"):
-        st.session_state.logged_in_user = None
-        st.success("You have been logged out.")
-        st.session_state.page ="login"
-        st.rerun()
+    # st.markdown("---")
+    # if st.button("Logout", type="secondary", key="patient_dashboard_logout_btn_bottom"):
+    #     st.session_state.logged_in_user = None
+    #     st.success("You have been logged out.")
+    #     st.session_state.page ="login"
+    #     st.rerun()
     render_footer()

@@ -1,6 +1,37 @@
-<component name="InspectionProjectProfileManager">
-  <settings>
-    <option name="USE_PROJECT_PROFILE" value="false" />
-    <version value="1.0" />
-  </settings>
-</component>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthAI - Personalized Treatment Plans</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    </head>
+<body>
+    <div class="main-container">
+        <header class="navbar">
+            <div class="logo">HealthAI</div>
+            <nav class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="#">About</a>    <a href="#">Contact</a>  </nav>
+        </header>
+
+        <main class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <img src="{{ url_for('static', filename='images/medical_cross_icon.png') }}" alt="Medical Cross Icon" class="hero-icon">
+                    Personalized Treatment Plans
+                </h1>
+                <p class="hero-subtitle">Advanced AI-powered healthcare tailored to your needs</p>
+                <div class="button-row">
+                    <a href="{{ url_for('login') }}" class="btn login-btn">
+                        <span class="icon">🔐</span> Login
+                    </a>
+                    <a href="{{ url_for('signup') }}" class="btn signup-btn">
+                        <span class="icon">✨</span> Sign Up
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        </div> </body>
+</html>

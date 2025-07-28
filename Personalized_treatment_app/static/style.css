@@ -1,0 +1,214 @@
+/* General Body Styling - Modern, Clean Base */
+body {
+    background-color: #f0f2f5; /* Very light grey/blue for a soft background */
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: #34495e; /* Default text color, dark but not harsh black */
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+
+    /* Background Image (replace with your desired URL/path) */
+    background-image: url('bubbles.png'); /* Example subtle medical background */
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Keeps background fixed during scroll */
+}
+
+/* Main Streamlit App Container - Centralized Card-like Appearance */
+.stApp {
+    max-width: 850px; /* Wider content area */
+    margin: 2rem auto; /* Center with margin top/bottom */
+    padding: 2.5rem;
+    background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent white card */
+    border-radius: 15px; /* More rounded corners */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Stronger, softer shadow */
+    position: relative; /* For potential absolute positioning of elements later */
+}
+
+/* Header Adjustments (if any from render_header) */
+.stApp > header {
+    background-color: transparent; /* Ensure header doesn't block background image */
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+/* Typography and Headings */
+h1 {
+    text-align: center;
+    color: #007bff; /* Primary branding blue */
+    font-size: 2.8em;
+    font-weight: 700; /* Bold */
+    margin-bottom: 0.5em;
+    letter-spacing: -0.02em; /* Slightly tighter letter spacing for modern look */
+}
+
+h3, h4 {
+    color: #2c3e50; /* Darker heading color */
+    font-weight: 600;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #e9ecef; /* Subtle separator */
+}
+
+p {
+    text-align: center;
+    font-size: 1.1em;
+    color: #6c757d; /* Softer text color for descriptive paragraphs */
+    margin-bottom: 2rem;
+}
+
+/* Form Styling - The core input area */
+.stForm {
+    background-color: #ffffff; /* Explicitly white for the form card */
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); /* Subtle shadow for the form itself */
+    margin-top: 2rem;
+    border: 1px solid #e0e0e0; /* Light border */
+}
+
+/* Input Fields - Consistent and Clean */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea,
+.stDateInput > div > div > input,
+.stSelectbox > div > div > div > div {
+    border: 1px solid #ced4da;
+    border-radius: 8px; /* Slightly more rounded */
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #495057;
+    background-color: #f8f9fa; /* Very light background for inputs */
+    transition: all 0.2s ease-in-out;
+    width: 100%; /* Ensure full width */
+}
+
+.stTextInput > div > div > input:focus,
+.stTextArea > div > div > textarea:focus,
+.stDateInput > div > div > input:focus,
+.stSelectbox > div > div > div > div:focus-within { /* For selectbox focus */
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    background-color: #ffffff; /* White background on focus */
+    outline: none;
+}
+
+/* Buttons - Primary Action Styles */
+.stButton > button {
+    background-color: #007bff; /* CarePatron-like blue */
+    color: white;
+    padding: 0.8rem 1.8rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    width: 100%;
+    margin-top: 1.5em;
+    letter-spacing: 0.02em;
+}
+
+.stButton > button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px); /* Slight lift on hover */
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+}
+
+/* Secondary Button (Go to Login) - Differentiated Style */
+.stButton[data-testid*="go_to_login_btn"] > button { /* Using part of the testid for robustness */
+    background-color: #6c757d; /* Grey for secondary action */
+    color: white;
+}
+
+.stButton[data-testid*="go_to_login_btn"] > button:hover {
+    background-color: #5a6268;
+}
+
+/* Radio Button (Patient/Doctor) - Segmented Button Feel (more advanced) */
+.stRadio > label { /* Label above the radio options */
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 1em;
+    display: block; /* Make it a block element to properly space */
+}
+
+.stRadio div[data-testid="stRadio"] {
+    display: flex; /* Arrange options side-by-side */
+    justify-content: center; /* Center the options within their container */
+    gap: 10px; /* Space between radio buttons */
+    margin-bottom: 1.5rem; /* Space below the radio group */
+}
+
+.stRadio div[data-testid="stRadio"] label {
+    flex: 1; /* Make each radio button take equal width */
+    text-align: center;
+    padding: 0.8em 1.2em;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    font-size: 1em;
+    color: #495057;
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+.stRadio div[data-testid="stRadio"] label:hover {
+    background-color: #e9ecef;
+    border-color: #b0c4de;
+}
+
+.stRadio div[data-testid="stRadio"] input[type="radio"]:checked + div { /* Target the Streamlit internal div for checked state */
+    background-color: #e6f2ff !important; /* Light blue background for selected */
+    border-color: #007bff !important; /* Primary blue border */
+    color: #007bff !important; /* Blue text for selected */
+    font-weight: bold;
+}
+
+/* Hide Streamlit's default radio button input circle */
+.stRadio div[data-testid="stRadio"] input[type="radio"] {
+    display: none;
+}
+
+
+/* Error and Info Messages */
+.stAlert {
+    border-radius: 8px;
+    font-size: 0.95em;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.stAlert.error {
+    background-color: #ffe6e6; /* Softer red background */
+    color: #cc0000; /* Darker red text */
+    border: 1px solid #ffcccc;
+}
+
+.stAlert.info {
+    background-color: #e6f7ff; /* Lighter blue background */
+    color: #006699; /* Darker blue text */
+    border: 1px solid #cceeff;
+}
+
+/* Horizontal Rule */
+hr {
+    border: none;
+    border-top: 1px solid #e9ecef; /* Soft grey line */
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+/* Footer Styling */
+footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+    color: #88929e; /* Light grey for footer text */
+    font-size: 0.85em;
+}

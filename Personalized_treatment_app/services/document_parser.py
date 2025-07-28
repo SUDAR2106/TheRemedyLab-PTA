@@ -142,7 +142,7 @@ class DocumentParser:
             print(f"DocumentParser: Doctor {report.assigned_doctor_id} assigned to report {report_id}.")
 
         # --- Step 2: AI Recommendation
-        if report.processing_status in['extracted','pending_ai_analysising_ai']:
+        if report.processing_status == 'extracted':
             print(f"DocumentParser: Generating AI recommendations for report {report_id}...")
             ai_recommendations = generate_ai_recommendations(extracted)
 
@@ -176,15 +176,10 @@ class DocumentParser:
                         print(f"DocumentParser: New recommendation created for report {report_id}.")
                     else:
                         print(f"DocumentParser: Failed to create recommendation for report {report_id}.")
-                report.processing_status = 'pending_doctor_review'
             else:
                 print(f"DocumentParser: AI recommendation engine returned no results for report {report_id}.")
-                print(f"[DocumentParser] AI recommendation failed. Marking as pending_ai_analysis.")
-                report.processing_status = 'pending_ai_analysis'
-            report.save()
         else:
-            print(f"[DocumentParser] Skipping AI generation — current status: {report.processing_status}")
-
+            print(f"DocumentParser: Skipping doctor assignment and AI generation — status not extracted.")
 
         return True
 

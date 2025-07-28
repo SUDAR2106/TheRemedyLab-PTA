@@ -88,7 +88,7 @@ class Recommendation:
         """
         query = """
             SELECT * FROM recommendations
-            WHERE doctor_id = ? AND status IN ('approved_by_doctor', 'modified_and_approved_by_doctor', 'rejected_by_doctor')
+            WHERE doctor_id = ? AND status IN ('approved_by_doctor', 'modified_and_approved_by_doctor', 'Consultation_required')
             ORDER BY reviewed_date DESC
         """
         results = DBManager.fetch_all(query, (doctor_id,))
@@ -189,7 +189,7 @@ class Recommendation:
         """
         # When rejecting, clear approved treatment/lifestyle as they are not "approved"
         return self.update_status(
-            new_status="rejected_by_doctor",
+            new_status="Consultation_required",
             doctor_id=doctor_id,
             doctor_notes=doctor_notes,
             approved_treatment=None, # Clear any previous approved content

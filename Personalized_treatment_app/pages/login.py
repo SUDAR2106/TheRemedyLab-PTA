@@ -165,7 +165,7 @@ def show_page():
     render_header()
     
     # Main layout
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 4, 1])
     
     with col2:
               
@@ -188,13 +188,13 @@ def show_page():
                 placeholder="Enter your password"
             )
             
-            # Remember me and forgot password
-            col_remember, col_forgot = st.columns([1, 1])
-            with col_remember:
-                remember_me = st.checkbox("Remember me")
-            with col_forgot:
-                if st.button("Forgot Password?", key="forgot_password"):
-                    st.info("🔐 Password reset functionality will be implemented soon. Please contact support for now.")
+            # # Remember me and forgot password
+            # col_remember, col_forgot = st.columns([1, 1])
+            # with col_remember:
+            #     remember_me = st.checkbox("Remember me")
+            # with col_forgot:
+            #     if st.button("Forgot Password?", key="forgot_password"):
+            #         st.info("🔐 Password reset functionality will be implemented soon. Please contact support for now.")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -207,12 +207,12 @@ def show_page():
                 with st.spinner("🔍 Authenticating..."):
                     user = User.get_by_username(username)
 
-                    # Debug information (remove in production)
-                    if user:
-                        st.write(f"User found: {user.username}")
-                        st.write(f"Entered password: {password}")
-                        st.write(f"Stored hash: {user.password_hash}")
-                        st.write("Password check result:", user.verify_password(password))
+                    # # Debug information (remove in production)
+                    # if user:
+                    #     st.write(f"User found: {user.username}")
+                    #     st.write(f"Entered password: {password}")
+                    #     st.write(f"Stored hash: {user.password_hash}")
+                    #     st.write("Password check result:", user.verify_password(password))
 
                     # Verify password
                     if user and user.verify_password(password):

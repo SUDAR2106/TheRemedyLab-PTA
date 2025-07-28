@@ -34,24 +34,39 @@ def show_page():
         st.session_state.page="login"
         st.stop()
 
-    st.title(f"👨‍⚕️ Welcome, Dr. {current_user.first_name} {current_user.last_name}!")
-    st.subheader("Doctor Dashboard")
+    # st.title(f"👨‍⚕️ Hi, Dr. {current_user.first_name} {current_user.last_name}!")
+    # st.subheader("Doctor Dashboard")
+    st.markdown("""
+    <style>
+        .dashboard-title {{
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }}
+       
+    </style>
+
+    <div class="dashboard-title">Doctor Dashboard</div>
+
+""", unsafe_allow_html=True)
+
 
     st.markdown("---")
 
-    # --- Doctor Information Section ---
-    st.header("My Profile")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write(f"**Username:** {current_user.username}")
-        st.write(f"**First Name:** {current_user.first_name}")
-        st.write(f"**Last Name:** {current_user.last_name}")
-        st.write(f"**Email:** {current_user.email if current_user.email else 'N/A'}")
-    with col2:
-        st.write(f"**Specialization:** {current_doctor.specialization if current_doctor.specialization else 'N/A'}")
-        st.write(f"**License ID:** {current_doctor.medical_license_number if current_doctor.medical_license_number else 'N/A'}")
-        st.write(f"**Hospital:** {current_doctor.hospital_affiliation if current_doctor.hospital_affiliation else 'N/A'}")
-        st.write(f"**Contact:** {current_doctor.contact_number if current_doctor.contact_number else 'N/A'}")
+    # # --- Doctor Information Section ---
+    # st.header("My Profile")
+    # col1, col2 = st.columns(2)
+    # with col1:
+    #     st.write(f"**Username:** {current_user.username}")
+    #     st.write(f"**First Name:** {current_user.first_name}")
+    #     st.write(f"**Last Name:** {current_user.last_name}")
+    #     st.write(f"**Email:** {current_user.email if current_user.email else 'N/A'}")
+    # with col2:
+    #     st.write(f"**Specialization:** {current_doctor.specialization if current_doctor.specialization else 'N/A'}")
+    #     st.write(f"**License ID:** {current_doctor.medical_license_number if current_doctor.medical_license_number else 'N/A'}")
+    #     st.write(f"**Hospital:** {current_doctor.hospital_affiliation if current_doctor.hospital_affiliation else 'N/A'}")
+    #     st.write(f"**Contact:** {current_doctor.contact_number if current_doctor.contact_number else 'N/A'}")
     
     # Placeholder for 'Edit Profile' button if needed later
     # if st.button("Edit Profile"):
@@ -230,10 +245,10 @@ def show_page():
         else:
             st.info("You have not reviewed any recommendations yet.")
 
-    st.markdown("---")
-    if st.button("Logout", type="secondary", key="doctor_dashboard_logout_btn_bottom"):
-        st.session_state.logged_in_user = None
-        st.success("You have been logged out.")
-        st.session_state.page ="login"
-        st.rerun()
+    # st.markdown("---")
+    # if st.button("Logout", type="secondary", key="doctor_dashboard_logout_btn_bottom"):
+    #     st.session_state.logged_in_user = None
+    #     st.success("You have been logged out.")
+    #     st.session_state.page ="login"
+    #     st.rerun()
     render_footer()

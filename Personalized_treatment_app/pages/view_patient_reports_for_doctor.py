@@ -49,7 +49,7 @@ def show_page():
             st.rerun()
         st.stop()
 
-    st.title(f"📋 Reports for {patient_user.first_name} {patient_user.last_name}")
+    st.subheader(f"📋 Reports for {patient_user.first_name} {patient_user.last_name}")
     st.markdown("---")
 
     reports = HealthReport.find_by_patient_id(viewing_patient_id)
@@ -61,7 +61,7 @@ def show_page():
         
         # Define columns for the custom table layout
         # Report Name, Type, Upload Date, Processing Status, Doctor Review Status, View Report
-        col_names = st.columns([2, 2, 2, 2, 2, 2,2]) # Adjust widths as needed
+        col_names = st.columns([4, 2, 2, 2, 8, 3, 3]) # Adjust widths as needed
         with col_names[0]: st.markdown("**Report Name**")
         with col_names[1]: st.markdown("**Type**")
         with col_names[2]: st.markdown("**Upload Date**")
