@@ -8,9 +8,9 @@ PyMuPDF
 spacy
 pyPDF2
 bcrypt
-BytesIO
+# BytesIO
 image
-base64
+# base64
 Pillow
 dotenv
 openai
